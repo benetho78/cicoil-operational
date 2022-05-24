@@ -1,15 +1,16 @@
-# Scripts descarga datos pronosticos
+# Scripts para el sistema operacional de pronostico de derrames de petroleo
 
 ## Requerimientos
 
- - Comando NCO
+ - OpenDrift-CiCOil
+ - TAMOC
  - python > 3.7
- - xarray, dask, siphon
+ - xarray
  
 ## Herramientas:
 
- - `bin/download-fnmoc-amseas-forecast-ncks.py` : Descarga un subconjunto del pronostico FNMOC de la region AMSEAS.
- - `bin/download-gfs-forecast.py` : Descarga un subconjunto del pronostico GLOBAL GFS 1/4 de grado.
+ - `bin/run_nearfield.py` : Ejecuta el modelo TAMOC para una localizacion especifica.
+ - `bin/run_farfield.py`  : Ejecuta el modelo OpenDrift-CiCOil para una localizacion especifica.
 
 ## Sobre los datos:
 
