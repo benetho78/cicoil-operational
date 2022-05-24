@@ -1,0 +1,45 @@
+sim_name: 'TestFG_00'
+point:
+  name: 'Point-06'
+  depth: '400'
+  lon: -94.767358
+  lat: 20.040589
+oil:
+  tag: 'medium'
+  origin: "GULF OF MEXICO, USA"
+  name: 'GENERIC BUNKER C'
+spill:
+  flow_rate: 40.
+  leak_rate: 1.0
+  vertical_angle: 90
+  horizont_angle: 0
+  GOR: 1500.
+  depth: 400.
+  jet_diam: 0.2
+  rel_radius: 1000.0
+  temp: 65.0
+  bins: 12
+model:
+  weathering: 'cicese'
+  log_level: 20
+  fartype: '3D Sim.'
+  reader_current: 'reader_amseas' 
+  reader_winds: 'reader_gfswinds'
+cicoil:
+  wind_factor: 0.035
+  sim_len: 4
+  N_parti: 9000
+  step_time: 1.0
+  repo_time: 1.0
+sim:
+  StarTime: '20220322'
+  Shour: 0
+  EndTime: '20220327' 
+  Ehour: 0
+input:
+  curr: 'fnmoc'
+  wind: 'gfs'
+  wave:
+datadir: "/LUSTRE/driftruns/TAMOC_input_files/"
+outdir: "/home/jcerda/Python/"
+

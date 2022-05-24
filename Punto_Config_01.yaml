@@ -1,0 +1,69 @@
+sim_name: 'Heavy_FGn_01'
+point:
+  name: 'Nombre'
+  depth: '300'
+  lon: -92.66721
+  lat: 19.63187
+  corners: [-95.0, -90.0, 18.0, 22.0]
+loc:
+  s: 'Ciudad'
+  x: -91.833333
+  y: 18.633333
+  fontsize: 12
+  backgroundcolor: 'white'
+oil:
+  tag: 'heavy'
+  origin: "GULF OF CAMPECHE, MEXICO"
+  name: 'MAYA'
+spill:
+  flow_rate: 40.
+  leak_rate: 1.0
+  vertical_angle: 90
+  horizont_angle: 0
+  GOR: 1500.
+  depth: 300.
+  jet_diam: 0.2
+  rel_radius: 1000.0
+  temp: 65.0
+  bins: 12
+model:
+  weathering: 'cicese'
+  log_level: 20
+  fartype: '3D Sim.'
+  advection_scheme: 'euler'
+cicoil:
+  wind_factor: 0.035
+  sim_len: 4
+  N_parti: 7500
+  step_time: 1.0
+  repo_time: 1.0
+sim:
+  StartTime: '20220418'
+  Shour: 0
+  EndTime: '20220423'
+  Ehour: 0
+input:
+  curr: 'hycom'
+  wind: 'gfs'
+  wave:
+fall_values:
+  x_sea_water_velocity: 0
+  y_sea_water_velocity: 0
+  sea_water_temperature: 0
+  sea_water_salinity: 0
+  x_wind: 0
+  y_wind: 0
+  sea_surface_wave_significant_height: 0
+  sea_surface_wave_stokes_drift_x_velocity: 0
+  sea_surface_wave_stokes_drift_y_velocity: 0
+  ocean_vertical_diffusivity: 0
+  sea_ice_area_fraction: 0
+datadir: "/home/jcerda/Python/TAMOC_input_files/data/"
+outdir: "/home/jcerda/Python/Localizaciones/"
+
+# datadir: "/LUSTRE/driftruns/TAMOC_input_files/data/"
+# outdir: "/LUSTRE/driftruns/Locations/"
+
+# datadir: "/raid/driftruns/forecast-runs/data/"
+# outdir: "/raid/driftruns/forecast-runs/Puntos/"
+
