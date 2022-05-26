@@ -48,7 +48,8 @@ if __name__ == "__main__":
       print(error)
   
   # Create simulation name taken inputs values
-  sim_name = ''.join([PtoParam['point']['name'], '_', PtoParam['oil']['name'], '_', PtoParam['input']['curr'][0], PtoParam['input']['wind'][0],
+  txtoil = PtoParam['oil']['name'].split(" ")[0].replace('/','-')
+  sim_name = ''.join([PtoParam['point']['name'], '_', txtoil, '_', PtoParam['input']['curr'][0], PtoParam['input']['wind'][0],
              '_', str(PtoParam['spill']['depth']), 'm'])
 
   # load Point info
