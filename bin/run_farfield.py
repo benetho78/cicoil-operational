@@ -7,11 +7,10 @@ Created on Tue Jan 25 08:39:37 2022
 """
 
 import os
-import sys
 from datetime import datetime, timedelta
 import yaml
 import argparse
-import datetime as dt
+# import datetime as dt
 import numpy as np
 
 from opendrift.readers import reader_netCDF_CF_generic
@@ -19,9 +18,9 @@ from opendrift.models.tamoc_plume import Plume
 from opendrift.readers import reader_ROMS_native
 from opendrift.readers import reader_NEMO_native
 from opendrift.models.ciceseoil import OpenCiceseOil
+
 # from opendrift.readers import reader_basemap_landmask
 # from opendrift.models.openplume3D import OpenPlume3D
-
 # import netCDF4 as nc
 # import xarray as xr
 # from siphon.catalog import TDSCatalog
@@ -42,6 +41,7 @@ if __name__ == "__main__":
 
   parser = argparse.ArgumentParser(description='Run far field model OPENDRIFT', prog='run_farfield')
   parser.add_argument('--subset', '-s', action='store', dest='PtoParam', help='yaml file with the information about point.')
+  parser.add_argument('--windfac', '-w', action='store', dest='WindFac', help='Wind Factor', required=False)
   parser.add_argument('--commands', '-c', action='store_true', dest='show_commands', help='Just show the commands to run')
 
   # args = parser.parse_args('--config-file', "../Pto_Config.yaml")
@@ -54,26 +54,32 @@ if __name__ == "__main__":
           except:
               print ('Something went wrong reading ' + args.subsetconfig)            
 
+  # Wind factor as input argument
+  if args.WindFac:
+      wind_factor = float(args.WindFac)
+      print('Factor del viento: ', wind_factor)
+
   # IF date is NOT given, run the present day
   if PtoParam['sim']['StartTime'] == None:
-      # starttime = (dt.datetime.today() - dt.timedelta(days=1)).strftime("%Y%m%d")
-      # endtime = (dt.datetime.today() + dt.timedelta(days=PtoParam['cicoil']['sim_len'])).strftime("%Y%m%d")
-      starttime = (dt.datetime.today().replace(microsecond=0, second=0, minute=0, hour=0) - dt.timedelta(days=1))
-      endtime = (dt.datetime.today().replace(microsecond=0, second=0, minute=0, hour=0) + dt.timedelta(days=PtoParam['cicoil']['sim_len']))
+      starttime = (datetime.today().replace(microsecond=0, second=0, minute=0, hour=0) - timedelta(days=1))
+      endtime = (datetime.today().replace(microsecond=0, second=0, minute=0, hour=0) + timedelta(days=PtoParam['cicoil']['sim_len']))
   else:
-      # smonth = int(PtoParam['sim']['Smonth'] + 1)
-      starttime = dt.datetime(int(PtoParam['sim']['StartTime'][0:4]), int(PtoParam['sim']['StartTime'][4:6]), int(PtoParam['sim']['StartTime'][6:8]),
+      starttime = datetime(int(PtoParam['sim']['StartTime'][0:4]), int(PtoParam['sim']['StartTime'][4:6]), int(PtoParam['sim']['StartTime'][6:8]),
                               PtoParam['sim']['Shour'], 0)
-      # emonth = int(PtoParam['sim']['Emonth'] + 1)
-      endtime = dt.datetime(int(PtoParam['sim']['EndTime'][0:4]), int(PtoParam['sim']['EndTime'][4:6]), int(PtoParam['sim']['EndTime'][6:8]),
+      endtime = datetime(int(PtoParam['sim']['EndTime'][0:4]), int(PtoParam['sim']['EndTime'][4:6]), int(PtoParam['sim']['EndTime'][6:8]),
                             PtoParam['sim']['Ehour'], 0)
       
-  txtTime = starttime.strftime("%Y%m%d-%H")  # str(starttime)[0:10]
+  txtTime = starttime.strftime("%Y%m%d-%H")
+
   # Read or define wind_factor
-  if PtoParam['cicoil']['wind_factor'] != None:
-      wind_factor = float(PtoParam['cicoil']['wind_factor'])
-  else: wind_factor = 0.035
-  
+  try:
+      wind_factor
+  except NameError:
+      if PtoParam['cicoil']['wind_factor'] != None:
+          wind_factor = float(PtoParam['cicoil']['wind_factor'])
+      else: wind_factor = 0.035
+
+
   # Select Simulation location and results output file
   output_path = os.path.join(PtoParam['outdir'],PtoParam['point']['name'],txtTime[0:8])
   
@@ -81,7 +87,10 @@ if __name__ == "__main__":
   txtTime = starttime.strftime("%Y%m%d-%H")  # str(starttime)[0:10]
   output_tamoc = os.path.join(PtoParam['outdir'],PtoParam['point']['name'],txtTime[0:8],'TAMOC_output_files/')
   
-  sim_name = PtoParam['sim_name']
+  # Create simulation name taken inputs values
+  sim_name = ''.join([PtoParam['point']['name'], '_', PtoParam['oil']['name'], '_', PtoParam['input']['curr'][0], PtoParam['input']['wind'][0],
+             '_', str(PtoParam['spill']['depth']), 'm'])
+
   sim_duration = timedelta(days=int(PtoParam['cicoil']['sim_len']))
   particles_number = float(PtoParam['cicoil']['N_parti'])
   step_time = float(PtoParam['cicoil']['step_time'])           # hours
@@ -129,17 +138,13 @@ if __name__ == "__main__":
       reader_current = reader_netCDF_CF_generic.Reader(filename=PtoParam['datadir'] + 'hycom/HYCOM-forecast-GoM-' + txtTime[0:8] + '.nc', name='hycom_forecast')
   if PtoParam['input']['wind'] == 'gfs':
       reader_winds = reader_netCDF_CF_generic.Reader(filename=PtoParam['datadir'] + 'gfs-winds/' + 'gfs-winds-forecast-GoM-' + txtTime[0:8] + '.nc', name='gfs_forecast')
-  # print(reader_winds)
-  #print(reader_winds)
-  #print(reader_current)
 
   # o.add_reader([reader_basemap, reader_globcurrent, reader_oceanwind])
   o.add_reader([reader_current, reader_winds])
   o.set_oiltype(oil_name)
 
   # load TAMOC files
-  tamoc_file= ''.join((output_tamoc, PtoParam['sim_name'][0:-3], '-tamoc_', txtTime, '_', PtoParam['point']['name'],'_',str(release_depth.as_integer_ratio()[0]),'m'))
-  
+  tamoc_file= ''.join([output_tamoc, sim_name, '-tamoc_', txtTime])
 
   # Seed to Far-field and run
   spillets = particles_per_day
@@ -162,7 +167,7 @@ if __name__ == "__main__":
   except OSError as error:
       print(error)
 
-  output_file = cicoil_path + PtoParam['point']['name'] + '_' + sim_name + '_' + starttime.strftime("%Y%m%d-%H") + '_' + endtime.strftime("%Y%m%d-%H") + '.nc'
+  output_file = ''.join([cicoil_path, sim_name, '_wf', str(wind_factor), '_', starttime.strftime("%Y%m%d-%H"),'_to_',endtime.strftime("%Y%m%d-%H"),  '.nc'])
   print(o)
   o.run(duration=sim_duration,
             time_step=timedelta(hours=step_time),
@@ -177,19 +182,25 @@ if __name__ == "__main__":
   except OSError as error:
       print(error)
 
-  postp_file=''.join((figs_path,PtoParam['point']['name'], '_', sim_name,'_',starttime.strftime("%Y%m%d-%H")))
+  postp_file=''.join((figs_path, sim_name, '_wf', str(wind_factor), '_',starttime.strftime("%Y%m%d-%H")))
 
   # Maps
-  o.plot(filename=postp_file +'_trajectories_zoom.png')
-  o.plot(filename=postp_file +'_trajectories.png', corners=PtoParam['point']['corners'])
-  o.plot_oil_budget(filename=postp_file + '_budget-01.png')                     # Added by "abgarcia"
-  o.plot_oil_budget(show_density_viscosity=True, show_wind_and_current=True,filename=postp_file + '_budget-02.png',) # Added by "abgarcia"
+  o.plot(filename=postp_file + '_trajectories_zoom.png')
+  o.plot(filename=postp_file + '_trajectories.png', corners=PtoParam['point']['corners'])
+  o.plot_oil_budget(filename=postp_file + '_budget-01.png')                                                          # Added by "abgarcia"
+  o.plot_oil_budget(show_density_viscosity=True, show_wind_and_current=True, filename=postp_file + '_budget-02.png') # Added by "abgarcia"
   
   # Animations
+  # currents
   o.animation(background=['x_sea_water_velocity', 'y_sea_water_velocity'],
-              colorbar=True, fps=10, filename=postp_file + '_zoom.gif',vmin=0, vmax=2.0)
+              colorbar=True, fps=10, filename=postp_file + '_curr_zoom.gif',vmin=0, vmax=2.0)
   o.animation(background=['x_sea_water_velocity', 'y_sea_water_velocity'],
-              colorbar=True, fps=10, filename=postp_file + '.gif', corners=PtoParam['point']['corners'], vmin=0, vmax=2.0)
+              colorbar=True, fps=10, filename=postp_file + '_curr.gif', corners=PtoParam['point']['corners'], vmin=0, vmax=2.0)
+  # # winds
+  # o.animation(background=['x_wind', 'y_wind'], cmap='turbo', skip=1, scale=50,
+  #             colorbar=True, fps=10, filename=postp_file + '_wind_zoom.gif',vmin=0, vmax=10.0)
+  o.animation(background=['x_wind', 'y_wind'], colorbar=True, fps=10, filename=postp_file + '_wind.gif',
+              corners=[-98, -88, 17, 31], cmap='turbo', vmin=0, vmax=10.0, skip=1, scale=100)
 
   o.animation(color='viscosity', fsp=10, filename=postp_file + '_viscosity.gif') # Added by "abgarcia"
   o.animate_vertical_distribution(filename=postp_file + '_vertical.gif')
